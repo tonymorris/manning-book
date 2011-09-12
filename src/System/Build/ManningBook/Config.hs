@@ -1,6 +1,7 @@
 module System.Build.ManningBook.Config where
 
 import Control.Monad.Identity hiding (sequence)
+import Control.Monad.Trans
 import Control.Applicative
 import Codec.Archive.Zip
 import System.Command
@@ -88,4 +89,7 @@ instance Monad f => Monad (ConfigerT f) where
     ConfigerT $ \c ->
       k c >>= \a -> f a ==>>> c
 
+instance MonadTrans ConfigerT where
+  lift =
+    ConfigerT . const
 
