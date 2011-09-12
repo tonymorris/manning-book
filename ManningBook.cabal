@@ -34,5 +34,6 @@ Library
                     src
 
   Exposed-Modules:  System.Build.ManningBook,
-                    System.Build.ManningBook.Config
+                    System.Build.ManningBook.Config,
+                    System.Build.ManningBook.Build
 
