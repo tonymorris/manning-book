@@ -1,14 +1,14 @@
-Name:               Haskell-Package
+Name:               ManningBook
 Version:            0.0.1
 License:            BSD3
 License-File:       LICENSE
 Author:             Tony Morris <ʇǝu˙sıɹɹoɯʇ@ןןǝʞsɐɥ>
 Maintainer:         Tony Morris
 Copyright:          Tony Morris
-Synopsis:           A skeleton for creating haskell packages
+Synopsis:           A script library for writing a book for Manning Publications
 Category:           Development
-Description:        A skeleton for creating haskell packages
-Homepage:           https://bitbucket.org/dibblego/haskell-package/
+Description:        A script library for writing a book for Manning Publications
+Homepage:           https://github.com/tonymorris/manning-book/
 Cabal-Version:      >= 1.2
 Build-Type:         Simple
 
@@ -17,7 +17,12 @@ Flag small_base
 
 Library
   Build-Depends:
-                    base < 5 && >= 3
+                    base < 5 && >= 3,
+                    mtl,
+                    directory,
+                    filepath,
+                    http-enumerator,
+                    enumerator
 
   GHC-Options:
                     -Wall
@@ -25,6 +30,6 @@ Library
   Hs-Source-Dirs:
                     src
 
-  Exposed-Modules:
-                    M
+  Exposed-Modules:  System.Build.ManningBook,
+                    System.Build.ManningBook.Config
 
