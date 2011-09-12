@@ -25,7 +25,8 @@ Library
                     enumerator,
                     bytestring,
                     zip-archive,
-                    FilePather
+                    FilePather,
+                    Command
 
   GHC-Options:
                     -Wall

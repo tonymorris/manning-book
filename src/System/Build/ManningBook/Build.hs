@@ -4,6 +4,7 @@ import System.Build.ManningBook.Config
 import Codec.Archive.Zip
 import qualified Data.ByteString.Lazy as L
 import System.FilePath.FilePather
+import qualified System.FilePath.FilePather as P
 import System.FilePath
 import System.Directory
 import Control.Monad
@@ -74,3 +75,9 @@ allDownload =
   , docbookindexerDownload
   , pdfmakerDownload
   ]
+
+jarFiles ::
+  FilePath
+  -> IO [FilePath]
+jarFiles =
+  P.find always (extensionEq "jar")

@@ -3,25 +3,31 @@ module System.Build.ManningBook.Config where
 import Control.Monad.Identity hiding (sequence)
 import Control.Applicative
 import Codec.Archive.Zip
+import System.Command
+import System.FilePath
 
 data Config =
   Config {
-    livebook :: String
+    src :: FilePath
+  , livebook :: String
   , dependencyDirectory :: FilePath
   , aavalidator_version :: String
   , aamakepdf_version :: String
   , zipOptions :: [ZipOption]
+  , java :: [String] -> IO ExitCode
   }
 
 defaultConfig ::
   Config
 defaultConfig =
   Config {
-    livebook = "http://livebook.manning.com/"
+    src = "src" </> "index.xml"
+  , livebook = "http://livebook.manning.com/"
   , dependencyDirectory = "lib"
   , aavalidator_version = "14.2"
   , aamakepdf_version = "18.4"
   , zipOptions = [OptVerbose]
+  , java = rawSystem "java"
   }
 
 aavalidator ::
