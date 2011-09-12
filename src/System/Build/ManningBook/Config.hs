@@ -2,6 +2,7 @@ module System.Build.ManningBook.Config where
 
 import Control.Monad.Identity hiding (sequence)
 import Control.Applicative
+import Codec.Archive.Zip
 
 data Config =
   Config {
@@ -9,6 +10,7 @@ data Config =
   , dependencyDirectory :: FilePath
   , aavalidator_version :: String
   , aamakepdf_version :: String
+  , zipOptions :: [ZipOption]
   }
 
 defaultConfig ::
@@ -19,6 +21,7 @@ defaultConfig =
   , dependencyDirectory = "lib"
   , aavalidator_version = "14.2"
   , aamakepdf_version = "18.4"
+  , zipOptions = [OptVerbose]
   }
 
 aavalidator ::
@@ -43,7 +46,7 @@ pdfmaker =
 
 newtype ConfigerT f a =
   ConfigerT {
-    runConfigerT :: Config -> f a
+    (==>>>) :: Config -> f a
   }
 
 type Configer a =
@@ -55,12 +58,12 @@ configer ::
 configer f =
   ConfigerT (Identity . f)
 
-runConfiger ::
+(=>>>) ::
   Configer a
   -> Config
   -> a
-runConfiger g =
-  runIdentity . runConfigerT g
+(=>>>) g =
+  runIdentity . (==>>>) g
 
 instance Functor f => Functor (ConfigerT f) where
   fmap f (ConfigerT z) =
@@ -77,6 +80,6 @@ instance Monad f => Monad (ConfigerT f) where
     ConfigerT . return . return
   ConfigerT k >>= f =
     ConfigerT $ \c ->
-      k c >>= \a -> runConfigerT (f a) c
+      k c >>= \a -> f a ==>>> c
 
 

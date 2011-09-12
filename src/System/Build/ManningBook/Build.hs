@@ -27,7 +27,7 @@ downloadDependencyIfNotAlready f g =
             else
               do createDirectoryIfMissing True d
                  withFile p WriteMode $ \h ->
-                   do r <- parseUrl (runConfiger g c)
+                   do r <- parseUrl (g =>>> c)
                       withManager $ run_ . httpRedirect r (\_ _ -> iterHandle h)
                       return False
 
@@ -38,7 +38,7 @@ aavalidatorDownload =
      _ <- unless x $ ConfigerT $ \c ->
                        let d = dependencyDirectory c </> "AAValidator"
                        in do createDirectoryIfMissing True d
-                             indir d (\z -> L.readFile (z </> dependencyDirectory c </> "AAValidator.zip") >>= extractFilesFromArchive [OptVerbose] . toArchive)
+                             indir d (\z -> L.readFile (z </> dependencyDirectory c </> "AAValidator.zip") >>= extractFilesFromArchive (zipOptions c) . toArchive)
      return x
 
 aamakepdfDownload ::
@@ -48,7 +48,7 @@ aamakepdfDownload =
      _ <- unless x $ ConfigerT $ \c ->
                        let d = dependencyDirectory c </> "AAMakePDF"
                        in do createDirectoryIfMissing True d
-                             indir d (\z -> L.readFile (z </> dependencyDirectory c </> "AAMakePDF.zip") >>= extractFilesFromArchive [OptVerbose] . toArchive)
+                             indir d (\z -> L.readFile (z </> dependencyDirectory c </> "AAMakePDF.zip") >>= extractFilesFromArchive (zipOptions c) . toArchive)
      return x
 
 docbookindexerDownload ::
@@ -57,9 +57,7 @@ docbookindexerDownload =
   do x <- downloadDependencyIfNotAlready "docbookIndexer.zip" docbookindexer
      _ <- unless x $ ConfigerT $ \c ->
                        let lib = dependencyDirectory c
-                           d = lib </> "docbookIndexer"
-                       in do createDirectoryIfMissing True d
-                             indir lib (\z -> L.readFile (z </> dependencyDirectory c </> "docbookIndexer.zip") >>= extractFilesFromArchive [OptVerbose] . toArchive)
+                       in indir lib (\z -> L.readFile (z </> dependencyDirectory c </> "docbookIndexer.zip") >>= extractFilesFromArchive (zipOptions c) . toArchive)
      return x
 
 pdfmakerDownload ::
