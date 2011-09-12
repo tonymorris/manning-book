@@ -22,7 +22,7 @@ defaultConfig ::
   Config
 defaultConfig =
   Config {
-    src = "src" </> "index.xml"
+    src = "src" </> "book.xml"
   , livebook = "http://livebook.manning.com/"
   , dependencyDirectory = "lib"
   , aavalidator_version = "14.2"
