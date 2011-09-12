@@ -1,7 +1,7 @@
 module System.Build.ManningBook.Config where
 
-import Control.Monad.Identity
-import Data.Enumerator
+import Control.Monad.Identity hiding (sequence)
+import Data.Enumerator hiding (sequence)
 import Data.Enumerator.Binary
 import Network.HTTP.Enumerator
 import System.IO
@@ -72,12 +72,48 @@ downloadDependencyIfNotAlready f g =
 aavalidatorDownload ::
   ConfigerT IO Bool
 aavalidatorDownload =
-  do x <- downloadDependencyIfNotAlready "AAValidator.zip" aamakepdf
+  do x <- downloadDependencyIfNotAlready "AAValidator.zip" aavalidator
      _ <- unless x $ ConfigerT $ \c ->
                        let d = dependencyDirectory c </> "AAValidator"
                        in do createDirectoryIfMissing True d
                              indir d (\z -> L.readFile (z </> dependencyDirectory c </> "AAValidator.zip") >>= extractFilesFromArchive [OptVerbose] . toArchive)
      return x
+
+aamakepdfDownload ::
+  ConfigerT IO Bool
+aamakepdfDownload =
+  do x <- downloadDependencyIfNotAlready "AAMakePDF.zip" aamakepdf
+     _ <- unless x $ ConfigerT $ \c ->
+                       let d = dependencyDirectory c </> "AAMakePDF"
+                       in do createDirectoryIfMissing True d
+                             indir d (\z -> L.readFile (z </> dependencyDirectory c </> "AAMakePDF.zip") >>= extractFilesFromArchive [OptVerbose] . toArchive)
+     return x
+
+docbookindexerDownload ::
+  ConfigerT IO Bool
+docbookindexerDownload =
+  do x <- downloadDependencyIfNotAlready "docbookIndexer.zip" docbookindexer
+     _ <- unless x $ ConfigerT $ \c ->
+                       let lib = dependencyDirectory c
+                           d = lib </> "docbookIndexer"
+                       in do createDirectoryIfMissing True d
+                             indir lib (\z -> L.readFile (z </> dependencyDirectory c </> "docbookIndexer.zip") >>= extractFilesFromArchive [OptVerbose] . toArchive)
+     return x
+
+pdfmakerDownload ::
+  ConfigerT IO Bool
+pdfmakerDownload =
+  downloadDependencyIfNotAlready "pdfmaker.xsl" pdfmaker
+
+allDownload ::
+  ConfigerT IO [Bool]
+allDownload =
+  sequence [
+    aavalidatorDownload
+  , aamakepdfDownload
+  , docbookindexerDownload
+  , pdfmakerDownload
+  ]
 
 newtype ConfigerT f a =
   ConfigerT {
