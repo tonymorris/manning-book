@@ -6,7 +6,11 @@ import Data.Enumerator.Binary
 import Network.HTTP.Enumerator
 import System.IO
 import System.FilePath
+import System.FilePath.FilePather
 import System.Directory
+import Control.Applicative
+import Codec.Archive.Zip
+import qualified Data.ByteString.Lazy as L
 
 data Config =
   Config {
@@ -49,22 +53,31 @@ pdfmaker =
 downloadDependencyIfNotAlready ::
   FilePath
   -> Configer String
-  -> ConfigerT IO ()
+  -> ConfigerT IO Bool
 downloadDependencyIfNotAlready f g =
   ConfigerT $ \c ->
     let d = dependencyDirectory c
         p = d </> f
     in do e <- doesFileExist p
-          unless e $
-            do createDirectoryIfMissing True d
-               withFile p WriteMode $ \h ->
-                 do r <- parseUrl (runConfiger g c)
-                    withManager $ run_ . httpRedirect r (\_ _ -> iterHandle h)
+          if e
+            then
+              return True
+            else
+              do createDirectoryIfMissing True d
+                 withFile p WriteMode $ \h ->
+                   do r <- parseUrl (runConfiger g c)
+                      withManager $ run_ . httpRedirect r (\_ _ -> iterHandle h)
+                      return False
 
 aavalidatorDownload ::
-  ConfigerT IO ()
+  ConfigerT IO Bool
 aavalidatorDownload =
-  downloadDependencyIfNotAlready "AAValidator.zip" aamakepdf
+  do x <- downloadDependencyIfNotAlready "AAValidator.zip" aamakepdf
+     _ <- unless x $ ConfigerT $ \c ->
+                       let d = dependencyDirectory c </> "AAValidator"
+                       in do createDirectoryIfMissing True d
+                             indir d (\z -> L.readFile (z </> dependencyDirectory c </> "AAValidator.zip") >>= extractFilesFromArchive [OptVerbose] . toArchive)
+     return x
 
 newtype ConfigerT f a =
   ConfigerT {
@@ -86,4 +99,22 @@ runConfiger ::
   -> a
 runConfiger g =
   runIdentity . runConfigerT g
+
+instance Functor f => Functor (ConfigerT f) where
+  fmap f (ConfigerT z) =
+    ConfigerT $ fmap f . z
+
+instance Applicative f => Applicative (ConfigerT f) where
+  pure =
+    ConfigerT . pure . pure
+  ConfigerT f <*> ConfigerT a =
+    ConfigerT (liftA2 (<*>) f a)
+
+instance Monad f => Monad (ConfigerT f) where
+  return =
+    ConfigerT . return . return
+  ConfigerT k >>= f =
+    ConfigerT $ \c ->
+      k c >>= \a -> runConfigerT (f a) c
+
 

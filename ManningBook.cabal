@@ -22,7 +22,10 @@ Library
                     directory,
                     filepath,
                     http-enumerator,
-                    enumerator
+                    enumerator,
+                    bytestring,
+                    zip-archive,
+                    FilePather
 
   GHC-Options:
                     -Wall
