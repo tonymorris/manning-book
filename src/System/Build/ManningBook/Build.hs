@@ -7,15 +7,13 @@ import System.FilePath.FilePather
 import qualified System.FilePath.FilePather as P
 import System.FilePath
 import System.Directory
+import System.Command
 import Control.Monad
 import Control.Monad.Writer
 import System.IO
 import Network.HTTP.Enumerator
 import Data.Enumerator.Binary
 import Data.Enumerator hiding (sequence)
-
--- newtype WriterT w m a = WriterT {runWriterT :: m (a, w)}
-
 
 downloadDependencyIfNotAlready ::
   FilePath
@@ -98,28 +96,26 @@ mkDistDir ::
 mkDistDir =
   ConfigerT $
     mkdir . distDir
-{-
-pdf =
-  ConfigerT $ \c ->
-    indir (dependencyDirectory c </> "AAMakePDF") undefined
-  -}
-
-{-
 
 pdf ::
-  Config
-  -> IO ExitCode
-pdf c =
-  withDependencies c $
-  mkdir (dist c) >>
-  (exitWith' $ indir (lib </> "AAMakePDF") $ \d ->
-    (system' c $ unwords [
-                           "java"
-                         , "-Djava.ext.dirs=lib"
-                         , "AAPDFMaker"
-                         , d </> indexFile
-                         , d </> dist c </> "fpinscala.pdf"
-                         ]) <* removeFileIfExists (d </> src </> "index.xml.temp.xml"))
+  CLog IO ([Bool], ExitCode)
+pdf =
+  do h <- allDownload
+     _ <- mkDistDir
+     i <- ConfigerT $ \c ->
+            indir (dependencyDirectory c </> "AAMakePDF")
+                   (\d -> system $ unwords [
+                                             "java"
+                                           , "-Djava.ext.dirs=" ++ dependencyDirectory c
+                                           , "AAPDFMaker"
+                                           , d </> src c
+                                           , d </> distDir c </> "fpinscala.pdf"
+                                           ]) ++> "Generate PDF"
+     _ <- ConfigerT $ \c ->
+            let junk = src c ++ ".temp.xml"
+            in ((doesFileExist junk >>= \k -> k `when` removeFile junk) ++> ("Removing junk file " ++ junk))
+     return (h, i)
+
 
 validate ::
   Config

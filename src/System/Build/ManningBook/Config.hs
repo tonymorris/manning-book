@@ -42,7 +42,7 @@ defaultConfig ::
 defaultConfig =
   Config {
     src = "src" </> "book.xml"
-  , distDir = "distDir"
+  , distDir = "dist"
   , livebook = "http://livebook.manning.com/"
   , dependencyDirectory = "lib"
   , aavalidator_version = "14.2"
@@ -108,6 +108,9 @@ type Configer a =
 
 type Log f a =
   WriterT (Seq String) f a
+
+type CLog f a =
+  ConfigerT (WriterT (Seq String) f) a
 
 (++>) ::
   Monad f =>
