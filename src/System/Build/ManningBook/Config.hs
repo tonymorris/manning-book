@@ -13,7 +13,7 @@ import System.Directory
 data Config =
   Config {
     src :: FilePath
-  , distDir :: FilePath
+  , distFile :: FilePath
   , livebook :: String
   , dependencyDirectory :: FilePath
   , aavalidator_version :: String
@@ -27,7 +27,7 @@ instance Show Config where
     intercalate "\n" [
       "Config {"
     , "  src                 = " ++ show s
-    , "  distDir             = " ++ show t
+    , "  distFile            = " ++ show t
     , ", livebook            = " ++ show l
     , ", dependencyDirectory = " ++ show dd
     , ", aavalidator_version = " ++ show v
@@ -42,7 +42,7 @@ defaultConfig ::
 defaultConfig =
   Config {
     src = "src" </> "book.xml"
-  , distDir = "dist"
+  , distFile = "dist" </> "book.pdf"
   , livebook = "http://livebook.manning.com/"
   , dependencyDirectory = "lib"
   , aavalidator_version = "14.2"

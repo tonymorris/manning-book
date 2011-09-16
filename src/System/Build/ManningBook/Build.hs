@@ -96,7 +96,7 @@ mkDistDir ::
   ConfIO ()
 mkDistDir =
   ConfigerT $
-    mkdir . distDir
+    mkdir . takeDirectory . distFile
 
 pdf ::
   CLog IO ([Bool], ExitCode)
@@ -110,7 +110,7 @@ pdf =
                                           , "-Djava.ext.dirs=" ++ dependencyDirectory c
                                           , "AAPDFMaker"
                                           , d </> src c
-                                          , d </> distDir c </> "fpinscala.pdf"
+                                          , d </> distFile c
                                           ]) ++> "Generate PDF"
      _ <- ConfigerT $ \c ->
             let junk = src c ++ ".temp.xml"
