@@ -14,6 +14,7 @@ import System.IO
 import Network.HTTP.Enumerator
 import Data.Enumerator.Binary
 import Data.Enumerator hiding (sequence)
+import Data.List
 
 downloadDependencyIfNotAlready ::
   FilePath
@@ -104,33 +105,36 @@ pdf =
      _ <- mkDistDir
      i <- ConfigerT $ \c ->
             indir (dependencyDirectory c </> "AAMakePDF")
-                   (\d -> system $ unwords [
-                                             "java"
-                                           , "-Djava.ext.dirs=" ++ dependencyDirectory c
-                                           , "AAPDFMaker"
-                                           , d </> src c
-                                           , d </> distDir c </> "fpinscala.pdf"
-                                           ]) ++> "Generate PDF"
+                  (\d -> system $ unwords [
+                                            "java"
+                                          , "-Djava.ext.dirs=" ++ dependencyDirectory c
+                                          , "AAPDFMaker"
+                                          , d </> src c
+                                          , d </> distDir c </> "fpinscala.pdf"
+                                          ]) ++> "Generate PDF"
      _ <- ConfigerT $ \c ->
             let junk = src c ++ ".temp.xml"
             in ((doesFileExist junk >>= \k -> k `when` removeFile junk) ++> ("Removing junk file " ++ junk))
      return (h, i)
 
- {-
 validate ::
-  Config
-  -> IO ExitCode
-validate c =
-  withDependencies c $
-  exitWith' $ indir (lib </> "AAValidator") $ \d ->
-       (system' c $ unwords [
-                              "java"
-                            , "-classpath"
-                            , intercalate [searchPathSeparator] ["AAValidator.jar", "svnkit.jar", "servlet.jar", "maven-embedder-2.0.4-dep.jar", "maven-2.0.9-uber.jar"]
-                            , "AAValidator"
-                            , d </> indexFile
-                            ]) <* removeFileIfExists (d </> src </> "temp.xml")
--}
+  CLog IO ([Bool], ExitCode)
+validate =
+  do h <- allDownload
+     i <- ConfigerT $ \c ->
+            indir (dependencyDirectory c </> "AAValidator")
+                  (\d -> do j <- jarFiles "."
+                            system $ unwords [
+                                               "java"
+                                             , "-classpath"
+                                             , intercalate [searchPathSeparator] j
+                                             , "AAValidator"
+                                             , d </> src c
+                                             ]) ++> "Validate"
+     _ <- ConfigerT $ \c ->
+            let junk = takeDirectory (src c) </> "temp.xml"
+            in ((doesFileExist junk >>= \k -> k `when` removeFile junk) ++> ("Removing junk file " ++ junk))
+     return (h, i)
 
 jarFiles ::
   FilePath
