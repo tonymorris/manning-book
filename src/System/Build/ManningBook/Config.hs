@@ -2,34 +2,81 @@ module System.Build.ManningBook.Config where
 
 import Control.Monad.Identity hiding (sequence)
 import Control.Monad.Trans
+import Control.Monad.Writer
 import Control.Applicative
 import Codec.Archive.Zip
-import System.Command
+import Data.List
+import Data.Sequence
 import System.FilePath
+import System.Directory
 
 data Config =
   Config {
     src :: FilePath
+  , distDir :: FilePath
   , livebook :: String
   , dependencyDirectory :: FilePath
   , aavalidator_version :: String
   , aamakepdf_version :: String
   , zipOptions :: [ZipOption]
-  , java :: [String] -> IO ExitCode
-  }
+  , java :: String
+  }  deriving (Eq, Read)
+
+instance Show Config where
+  show (Config s t l dd v p z j) =
+    intercalate "\n" [
+      "Config {"
+    , "  src                 = " ++ show s
+    , "  distDir             = " ++ show t
+    , ", livebook            = " ++ show l
+    , ", dependencyDirectory = " ++ show dd
+    , ", aavalidator_version = " ++ show v
+    , ", aamakepdf_version   = " ++ show p
+    , ", zipOptions          = " ++ show z
+    , ", java                = " ++ show j
+    , "}"
+    ]
 
 defaultConfig ::
   Config
 defaultConfig =
   Config {
     src = "src" </> "book.xml"
+  , distDir = "distDir"
   , livebook = "http://livebook.manning.com/"
   , dependencyDirectory = "lib"
   , aavalidator_version = "14.2"
   , aamakepdf_version = "18.4"
   , zipOptions = [OptVerbose]
-  , java = rawSystem "java"
+  , java = "java"
   }
+
+configFile ::
+  FilePath
+configFile =
+  ".manning-book"
+
+configPath ::
+  IO FilePath
+configPath =
+  fmap (\h -> h </> configFile) getHomeDirectory
+
+readConfig ::
+  IO Config
+readConfig =
+  do c <- configPath
+     e <- doesFileExist c
+     if e
+       then
+         do p <- getPermissions c
+            if readable p
+              then
+                do z <- readFile c
+                   return (read z)
+              else
+                return defaultConfig
+       else
+         return defaultConfig
 
 aavalidator ::
   Configer String
@@ -58,6 +105,22 @@ newtype ConfigerT f a =
 
 type Configer a =
   ConfigerT Identity a
+
+type Log f a =
+  WriterT (Seq String) f a
+
+(++>) ::
+  Monad f =>
+  f a
+  -> String
+  -> Log f a
+a ++> m =
+  WriterT $
+    do y <- a
+       return (y, return m)
+
+type ConfIO a =
+  ConfigerT (WriterT (Seq String) IO) a
 
 configer ::
   (Config -> a)
