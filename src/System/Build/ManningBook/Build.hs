@@ -116,7 +116,7 @@ pdf =
             in ((doesFileExist junk >>= \k -> k `when` removeFile junk) ++> ("Removing junk file " ++ junk))
      return (h, i)
 
-
+ {-
 validate ::
   Config
   -> IO ExitCode
