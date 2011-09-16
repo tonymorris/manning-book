@@ -106,7 +106,7 @@ pdf =
      i <- ConfigerT $ \c ->
             indir (dependencyDirectory c </> "AAMakePDF")
                   (\d -> system $ unwords [
-                                            "java"
+                                            java c
                                           , "-Djava.ext.dirs=" ++ dependencyDirectory c
                                           , "AAPDFMaker"
                                           , d </> src c
@@ -125,7 +125,7 @@ validate =
             indir (dependencyDirectory c </> "AAValidator")
                   (\d -> do j <- jarFiles "."
                             system $ unwords [
-                                               "java"
+                                               java c
                                              , "-classpath"
                                              , intercalate [searchPathSeparator] j
                                              , "AAValidator"
