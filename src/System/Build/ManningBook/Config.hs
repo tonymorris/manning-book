@@ -20,10 +20,14 @@ data Config =
   , aamakepdf_version :: String
   , zipOptions :: [ZipOption]
   , java :: String
+  , aspell :: String
+  , sgmlSkipFile :: FilePath
+  , masterDictionary :: String
+  , encoding :: String
   }  deriving (Eq, Read)
 
 instance Show Config where
-  show (Config s t l dd v p z j) =
+  show (Config s t l dd v p z j a sk dict enc) =
     intercalate "\n" [
       "Config {"
     , "  src                 = " ++ show s
@@ -34,6 +38,10 @@ instance Show Config where
     , ", aamakepdf_version   = " ++ show p
     , ", zipOptions          = " ++ show z
     , ", java                = " ++ show j
+    , ", aspell              = " ++ show a
+    , ", sgmlSkipFile        = " ++ show sk
+    , ", masterDictionary    = " ++ show dict
+    , ", encoding            = " ++ show enc
     , "}"
     ]
 
@@ -42,13 +50,17 @@ defaultConfig ::
 defaultConfig =
   Config {
     src = "src" </> "book.xml"
-  , distFile = "dist" </> "book.pdf"
+  , distFile = "out" </> "book.pdf"
   , livebook = "http://livebook.manning.com/"
   , dependencyDirectory = "lib"
   , aavalidator_version = "14.2"
   , aamakepdf_version = "18.4"
   , zipOptions = [OptVerbose]
   , java = "java"
+  , aspell = "aspell"
+  , sgmlSkipFile = "etc" </> "add-sgml-skip"
+  , masterDictionary = "en_US"
+  , encoding = "utf-8"
   }
 
 configFile ::

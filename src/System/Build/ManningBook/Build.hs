@@ -12,7 +12,7 @@ import Control.Monad
 import Control.Monad.Writer
 import System.IO
 import Network.HTTP.Enumerator
-import Data.Enumerator.Binary
+import Data.Enumerator.Binary hiding (mapM_)
 import Data.Enumerator hiding (sequence)
 import Data.List
 
@@ -107,7 +107,7 @@ pdf =
             indir (dependencyDirectory c </> "AAMakePDF")
                   (\d -> system $ unwords [
                                             java c
-                                          , "-Djava.ext.dirs=" ++ dependencyDirectory c
+                                          , "-Djava.ext.dirs=lib"
                                           , "AAPDFMaker"
                                           , d </> src c
                                           , d </> distFile c
@@ -136,8 +136,33 @@ validate =
             in ((doesFileExist junk >>= \k -> k `when` removeFile junk) ++> ("Removing junk file " ++ junk))
      return (h, i)
 
+spellcheck ::
+  CLog IO ()
+spellcheck =
+  ConfigerT $ \c ->
+    (do x <- xmlFiles (src c)
+        s <- readFile (sgmlSkipFile c)
+        t <- canonicalizePath (sgmlSkipFile c)
+        mapM_ (\z -> system . unwords $ [
+                                          aspell c
+                                        , "--dont-backup"
+                                        , "--master=" ++ masterDictionary c
+                                        , "--encoding=" ++ encoding c
+                                        , "--mode=sgml"
+                                        , "-p"
+                                        , t
+                                        , "-c"
+                                        , z
+                                        ] ++  (("--add-sgml-skip=" ++) `fmap` words s)) x) ++> "Spellcheck"
+
 jarFiles ::
   FilePath
   -> IO [FilePath]
 jarFiles =
   P.find always (extensionEq "jar")
+
+xmlFiles ::
+  FilePath
+  -> IO [FilePath]
+xmlFiles =
+  P.find always (extensionEq "xml")
