@@ -27,14 +27,15 @@ data Config =
   , encoding :: String
   , cat :: String
   , spellingErrorsFile :: FilePath
+  , logging :: Bool
   }  deriving (Eq, Read)
 
 instance Show Config where
-  show (Config s t l dd v p z j a sk aw dict enc c er) =
+  show (Config s t l dd v p z j a sk aw dict enc c er lg) =
     intercalate "\n" [
       "Config {"
     , "  src                 = " ++ show s
-    , "  distFile            = " ++ show t
+    , " , distFile            = " ++ show t
     , ", livebook            = " ++ show l
     , ", dependencyDirectory = " ++ show dd
     , ", aavalidator_version = " ++ show v
@@ -48,6 +49,7 @@ instance Show Config where
     , ", encoding            = " ++ show enc
     , ", cat                 = " ++ show c
     , ", spellingErrorsFile  = " ++ show er
+    , ", logging             = " ++ show lg
     , "}"
     ]
 
@@ -70,6 +72,7 @@ defaultConfig =
   , encoding = "utf-8"
   , cat = "cat"
   , spellingErrorsFile = "out" </> "spellingerrors"
+  , logging = True
   }
 
 configFile ::
