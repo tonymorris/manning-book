@@ -158,8 +158,8 @@ spellcheckInit =
 spellcheck ::
   CLog IO [Bool]
 spellcheck =
-  spellcheckInit >>
-  do h <- allDownload
+  do spellcheckInit
+     h <- allDownload
      ConfigerT $ \c ->
        (do x <- xmlFiles (src c)
            s <- readFile (sgmlSkipFile c)
@@ -180,8 +180,8 @@ spellcheck =
 spellcheckNoninteractive ::
   CLog IO ([Bool], ExitCode)
 spellcheckNoninteractive =
-  spellcheckInit >>
-  do h <- allDownload
+  do spellcheckInit
+     h <- allDownload
      x <- ConfigerT $ \c ->
        (mkdir . takeDirectory . spellingErrorsFile $ c) >>
        (do x <- xmlFiles (src c)
