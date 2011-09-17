@@ -24,6 +24,7 @@ Library
                     http-enumerator,
                     enumerator,
                     bytestring,
+                    containers,
                     zip-archive,
                     FilePather,
                     Command
