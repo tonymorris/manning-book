@@ -35,7 +35,7 @@ instance Show Config where
     intercalate "\n" [
       "Config {"
     , "  src                 = " ++ show s
-    , " , distFile            = " ++ show t
+    , ", distFile            = " ++ show t
     , ", livebook            = " ++ show l
     , ", dependencyDirectory = " ++ show dd
     , ", aavalidator_version = " ++ show v
