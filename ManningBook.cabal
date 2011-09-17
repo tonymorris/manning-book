@@ -39,3 +39,38 @@ Library
                     System.Build.ManningBook.Config,
                     System.Build.ManningBook.Build
 
+Executable          manning-book-pdf
+  Main-Is:          Pdf.hs
+
+  GHC-Options:
+                    -Wall
+
+  Hs-Source-Dirs:
+                    exe, src
+
+Executable          manning-book-validate
+  Main-Is:          Validate.hs
+
+  GHC-Options:
+                    -Wall
+
+  Hs-Source-Dirs:
+                    exe, src
+
+Executable          manning-book-conf
+  Main-Is:          Conf.hs
+
+  GHC-Options:
+                    -Wall
+
+  Hs-Source-Dirs:
+                    exe, src
+
+Executable          manning-book-spellcheck
+  Main-Is:          Spellcheck.hs
+
+  GHC-Options:
+                    -Wall
+
+  Hs-Source-Dirs:
+                    exe, src

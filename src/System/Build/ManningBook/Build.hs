@@ -1,5 +1,6 @@
 module System.Build.ManningBook.Build where
 
+import Prelude hiding (mapM_)
 import System.Build.ManningBook.Config
 import Codec.Archive.Zip
 import qualified Data.ByteString.Lazy as L
@@ -8,13 +9,14 @@ import qualified System.FilePath.FilePather as P
 import System.FilePath
 import System.Directory
 import System.Command
-import Control.Monad
-import Control.Monad.Writer
+import Control.Monad hiding (mapM_)
+import Control.Monad.Writer hiding (mapM_)
 import System.IO
 import Network.HTTP.Enumerator
 import Data.Enumerator.Binary hiding (mapM_)
 import Data.Enumerator hiding (sequence, length)
 import Data.List
+import Data.Foldable
 
 downloadDependencyIfNotAlready ::
   FilePath
@@ -222,3 +224,12 @@ xmlFiles ::
   -> IO [FilePath]
 xmlFiles =
   P.find always (extensionEq "xml")
+
+
+printLog ::
+  Foldable f =>
+  f String
+  -> ConfigerT IO ()
+printLog u =
+  ConfigerT $ \c ->
+    logging c `when` mapM_ (\w -> putStrLn ("[LOG] " ++ w)) u
