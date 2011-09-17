@@ -123,7 +123,8 @@ validate =
   do h <- allDownload
      i <- ConfigerT $ \c ->
             indir (dependencyDirectory c </> "AAValidator")
-                  (\d -> do j <- jarFiles "."
+                  (\d -> do g <- getCurrentDirectory
+                            j <- jarFiles g
                             system $ unwords [
                                                java c
                                              , "-classpath"
@@ -137,54 +138,58 @@ validate =
      return (h, i)
 
 spellcheck ::
-  CLog IO ()
+  CLog IO [Bool]
 spellcheck =
-  ConfigerT $ \c ->
-    (do x <- xmlFiles (src c)
-        s <- readFile (sgmlSkipFile c)
-        t <- canonicalizePath (sgmlSkipFile c)
-        mapM_ (\z -> system . unwords $ [
-                                          aspell c
-                                        , "--dont-backup"
-                                        , "--master=" ++ masterDictionary c
-                                        , "--encoding=" ++ encoding c
-                                        , "--mode=sgml"
-                                        , "-p"
-                                        , t
-                                        , "-c"
-                                        , z
-                                        ] ++  (("--add-sgml-skip=" ++) `fmap` words s)) x) ++> "Spellcheck"
+  do h <- allDownload
+     ConfigerT $ \c ->
+       (do x <- xmlFiles (src c)
+           s <- readFile (sgmlSkipFile c)
+           t <- canonicalizePath (addWordsFile c)
+           mapM_ (\z -> system . unwords $ [
+                                             aspell c
+                                           , "--dont-backup"
+                                           , "--master=" ++ masterDictionary c
+                                           , "--encoding=" ++ encoding c
+                                           , "--mode=sgml"
+                                           , "-p"
+                                           , t
+                                           , "-c"
+                                           , z
+                                           ] ++  (("--add-sgml-skip=" ++) `fmap` words s)) x) ++> "Spellcheck"
+     return h
 
 spellcheckNoninteractive ::
-  CLog IO ExitCode
+  CLog IO ([Bool], ExitCode)
 spellcheckNoninteractive =
-  ConfigerT $ \c ->
-    (mkdir . takeDirectory . spellingErrorsFile $ c) >>
-    (do x <- xmlFiles (src c)
-        s <- readFile (sgmlSkipFile c)
-        t <- canonicalizePath (sgmlSkipFile c)
-        (system . unwords $ [
-                              cat c
-                            , intercalate " " x
-                            , "|"
-                            , aspell c
-                            , "--dont-backup"
-                            , "--master=" ++ masterDictionary c
-                            , "--encoding=" ++ encoding c
-                            , "--mode=sgml"
-                            , "-p"
-                            , t
-                            , "list"
-                            , ">"
-                            , spellingErrorsFile c
-                            ] ++  (("--add-sgml-skip=" ++) `fmap` words s)) ->>
-          do e <- readFile (spellingErrorsFile c)
-             let n = length . lines $ e
-             hPutStrLn stderr ("(" ++ show n ++ ") spelling error" ++ if n == 1 then [] else "s")
-             hPutStrLn stderr e
-             return $ if n == 0
-                        then success
-                        else exitCode 12) ++> "Spellcheck non-interactive"
+  do h <- allDownload
+     x <- ConfigerT $ \c ->
+       (mkdir . takeDirectory . spellingErrorsFile $ c) >>
+       (do x <- xmlFiles (src c)
+           s <- readFile (sgmlSkipFile c)
+           t <- canonicalizePath (sgmlSkipFile c)
+           (system . unwords $ [
+                                 cat c
+                               , intercalate " " x
+                               , "|"
+                               , aspell c
+                               , "--dont-backup"
+                               , "--master=" ++ masterDictionary c
+                               , "--encoding=" ++ encoding c
+                               , "--mode=sgml"
+                               , "-p"
+                               , t
+                               , "list"
+                               , ">"
+                               , spellingErrorsFile c
+                               ] ++  (("--add-sgml-skip=" ++) `fmap` words s)) ->>
+             do e <- readFile (spellingErrorsFile c)
+                let n = length . lines $ e
+                hPutStrLn stderr ("(" ++ show n ++ ") spelling error" ++ if n == 1 then [] else "s")
+                hPutStrLn stderr e
+                return $ if n == 0
+                           then success
+                           else exitCode 12) ++> "Spellcheck non-interactive"
+     return (h, x)
 
 jarFiles ::
   FilePath

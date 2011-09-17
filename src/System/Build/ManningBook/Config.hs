@@ -22,6 +22,7 @@ data Config =
   , java :: String
   , aspell :: String
   , sgmlSkipFile :: FilePath
+  , addWordsFile :: FilePath
   , masterDictionary :: String
   , encoding :: String
   , cat :: String
@@ -29,7 +30,7 @@ data Config =
   }  deriving (Eq, Read)
 
 instance Show Config where
-  show (Config s t l dd v p z j a sk dict enc c er) =
+  show (Config s t l dd v p z j a sk aw dict enc c er) =
     intercalate "\n" [
       "Config {"
     , "  src                 = " ++ show s
@@ -42,6 +43,7 @@ instance Show Config where
     , ", java                = " ++ show j
     , ", aspell              = " ++ show a
     , ", sgmlSkipFile        = " ++ show sk
+    , ", addWordsFile        = " ++ show aw
     , ", masterDictionary    = " ++ show dict
     , ", encoding            = " ++ show enc
     , ", cat                 = " ++ show c
@@ -63,6 +65,7 @@ defaultConfig =
   , java = "java"
   , aspell = "aspell"
   , sgmlSkipFile = "etc" </> "add-sgml-skip"
+  , addWordsFile = "etc" </> "aspell-words.txt"
   , masterDictionary = "en_US"
   , encoding = "utf-8"
   , cat = "cat"
