@@ -41,9 +41,13 @@ mkdir ::
   FilePath
   -> Log IO ()
 mkdir d =
-  WriterT $
-    do createDirectoryIfMissing True d
-       return ((), return $ "Created directory " ++ d)
+  do e <- doesDirectoryExist d ++> ("Making directory " ++ d)
+     if e
+       then
+         return () ++> ("Directory " ++ d ++ " already exists")
+       else
+         do createDirectoryIfMissing True d ++> ("Creating directory " ++ d)
+            return () ++> ("Created directory " ++ d)
 
 aavalidatorDownload ::
   ConfIO Bool
@@ -137,9 +141,24 @@ validate =
             in ((doesFileExist junk >>= \k -> k `when` removeFile junk) ++> ("Removing junk file " ++ junk))
      return (h, i)
 
+spellcheckInit ::
+  CLog IO ()
+spellcheckInit =
+  ConfigerT $ \c ->
+    let w f = (do e <- doesFileExist f ++> "Initialize spell-checking"
+                  if e
+                    then
+                       return () ++> ("File " ++ f ++ " already exists")
+                    else
+                      do mkdir . takeDirectory $ f
+                         h <- openFile f AppendMode ++> ("Touch file " ++ f)
+                         hClose h ++> ("Close file " ++ f))
+    in w (sgmlSkipFile c) >> w (addWordsFile c)
+
 spellcheck ::
   CLog IO [Bool]
 spellcheck =
+  spellcheckInit >>
   do h <- allDownload
      ConfigerT $ \c ->
        (do x <- xmlFiles (src c)
@@ -161,12 +180,13 @@ spellcheck =
 spellcheckNoninteractive ::
   CLog IO ([Bool], ExitCode)
 spellcheckNoninteractive =
+  spellcheckInit >>
   do h <- allDownload
      x <- ConfigerT $ \c ->
        (mkdir . takeDirectory . spellingErrorsFile $ c) >>
        (do x <- xmlFiles (src c)
            s <- readFile (sgmlSkipFile c)
-           t <- canonicalizePath (sgmlSkipFile c)
+           t <- canonicalizePath (addWordsFile c)
            (system . unwords $ [
                                  cat c
                                , intercalate " " x

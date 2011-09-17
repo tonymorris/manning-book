@@ -143,6 +143,14 @@ a ++> m =
     do y <- a
        return (y, return m)
 
+(<++) ::
+  Monad f =>
+  String
+  -> f a
+  -> Log f a
+(<++) =
+  flip (++>)
+
 type ConfIO a =
   ConfigerT (WriterT (Seq String) IO) a
 
