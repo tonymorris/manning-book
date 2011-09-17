@@ -13,7 +13,7 @@ import Control.Monad.Writer
 import System.IO
 import Network.HTTP.Enumerator
 import Data.Enumerator.Binary hiding (mapM_)
-import Data.Enumerator hiding (sequence)
+import Data.Enumerator hiding (sequence, length)
 import Data.List
 
 downloadDependencyIfNotAlready ::
@@ -24,18 +24,18 @@ downloadDependencyIfNotAlready f g =
   ConfigerT $ \c ->
     let d = dependencyDirectory c
         p = d </> f
-    in WriterT $
-         do e <- doesFileExist p
-            if e
-              then
-                return (True, return $ "Dependency " ++ p ++ " already exists")
-              else
-                do createDirectoryIfMissing True d
-                   withFile p WriteMode $ \h ->
-                     do let u = g =>>> c
-                        r <- parseUrl u
-                        withManager $ run_ . httpRedirect r (\_ _ -> iterHandle h)
-                        return (False, return $ "Retrieved dependency " ++ p ++ " from " ++ show u)
+    in mkdir d >>
+         (WriterT $
+           do e <- doesFileExist p
+              if e
+                then
+                  return (True, return $ "Dependency " ++ p ++ " already exists")
+                else
+                  withFile p WriteMode $ \h ->
+                    do let u = g =>>> c
+                       r <- parseUrl u
+                       withManager $ run_ . httpRedirect r (\_ _ -> iterHandle h)
+                       return (False, return $ "Retrieved dependency " ++ p ++ " from " ++ show u))
 
 mkdir ::
   FilePath
@@ -154,6 +154,37 @@ spellcheck =
                                         , "-c"
                                         , z
                                         ] ++  (("--add-sgml-skip=" ++) `fmap` words s)) x) ++> "Spellcheck"
+
+spellcheckNoninteractive ::
+  CLog IO ExitCode
+spellcheckNoninteractive =
+  ConfigerT $ \c ->
+    (mkdir . takeDirectory . spellingErrorsFile $ c) >>
+    (do x <- xmlFiles (src c)
+        s <- readFile (sgmlSkipFile c)
+        t <- canonicalizePath (sgmlSkipFile c)
+        (system . unwords $ [
+                              cat c
+                            , intercalate " " x
+                            , "|"
+                            , aspell c
+                            , "--dont-backup"
+                            , "--master=" ++ masterDictionary c
+                            , "--encoding=" ++ encoding c
+                            , "--mode=sgml"
+                            , "-p"
+                            , t
+                            , "list"
+                            , ">"
+                            , spellingErrorsFile c
+                            ] ++  (("--add-sgml-skip=" ++) `fmap` words s)) ->>
+          do e <- readFile (spellingErrorsFile c)
+             let n = length . lines $ e
+             hPutStrLn stderr ("(" ++ show n ++ ") spelling error" ++ if n == 1 then [] else "s")
+             hPutStrLn stderr e
+             return $ if n == 0
+                        then success
+                        else exitCode 12) ++> "Spellcheck non-interactive"
 
 jarFiles ::
   FilePath

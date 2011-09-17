@@ -24,10 +24,12 @@ data Config =
   , sgmlSkipFile :: FilePath
   , masterDictionary :: String
   , encoding :: String
+  , cat :: String
+  , spellingErrorsFile :: FilePath
   }  deriving (Eq, Read)
 
 instance Show Config where
-  show (Config s t l dd v p z j a sk dict enc) =
+  show (Config s t l dd v p z j a sk dict enc c er) =
     intercalate "\n" [
       "Config {"
     , "  src                 = " ++ show s
@@ -42,6 +44,8 @@ instance Show Config where
     , ", sgmlSkipFile        = " ++ show sk
     , ", masterDictionary    = " ++ show dict
     , ", encoding            = " ++ show enc
+    , ", cat                 = " ++ show c
+    , ", spellingErrorsFile  = " ++ show er
     , "}"
     ]
 
@@ -61,6 +65,8 @@ defaultConfig =
   , sgmlSkipFile = "etc" </> "add-sgml-skip"
   , masterDictionary = "en_US"
   , encoding = "utf-8"
+  , cat = "cat"
+  , spellingErrorsFile = "out" </> "spellingerrors"
   }
 
 configFile ::
