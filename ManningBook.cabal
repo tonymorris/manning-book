@@ -74,3 +74,13 @@ Executable          manning-book-spellcheck
 
   Hs-Source-Dirs:
                     exe, src
+
+Executable          manning-book-init
+  Main-Is:          Init.hs
+
+  GHC-Options:
+                    -Wall
+
+  Hs-Source-Dirs:
+                    exe, src
+
