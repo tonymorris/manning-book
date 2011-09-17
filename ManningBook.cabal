@@ -11,6 +11,7 @@ Description:        A script library for writing a book for Manning Publications
 Homepage:           https://github.com/tonymorris/manning-book/
 Cabal-Version:      >= 1.2
 Build-Type:         Simple
+Extra-Source-Files: README.markdown
 
 Flag small_base
   Description:      Choose the new, split-up base package.
@@ -77,6 +78,15 @@ Executable          manning-book-spellcheck
 
 Executable          manning-book-init
   Main-Is:          Init.hs
+
+  GHC-Options:
+                    -Wall
+
+  Hs-Source-Dirs:
+                    exe, src
+
+Executable          manning-book-clean
+  Main-Is:          Clean.hs
 
   GHC-Options:
                     -Wall

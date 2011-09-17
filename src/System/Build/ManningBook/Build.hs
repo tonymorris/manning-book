@@ -43,13 +43,26 @@ mkdir ::
   FilePath
   -> Log IO ()
 mkdir d =
-  do e <- doesDirectoryExist d ++> ("Making directory " ++ d)
+  do e <- doesDirectoryExist d ++> ("Checking directory existence " ++ d)
      if e
        then
          return () ++> ("Directory " ++ d ++ " already exists")
        else
          do createDirectoryIfMissing True d ++> ("Creating directory " ++ d)
             return () ++> ("Created directory " ++ d)
+
+rmdir ::
+  FilePath
+  -> Log IO ()
+rmdir d =
+  do e <- doesDirectoryExist d ++> ("Checking directory existence " ++ d)
+     if e
+       then
+         do removeDirectoryRecursive d ++> ("Removing directory " ++ d)
+            return () ++> ("Removed directory " ++ d)
+       else
+         return () ++> ("Directory " ++ d ++ " already deleted")
+
 
 aavalidatorDownload ::
   ConfIO Bool
@@ -103,6 +116,18 @@ mkDistDir ::
 mkDistDir =
   ConfigerT $
     mkdir . takeDirectory . distFile
+
+rmDistDir ::
+  ConfIO ()
+rmDistDir =
+  ConfigerT $
+    rmdir . takeDirectory . distFile
+
+rmDependencyDir ::
+  ConfIO ()
+rmDependencyDir =
+  ConfigerT $
+    rmdir . dependencyDirectory
 
 pdf ::
   CLog IO ([Bool], ExitCode)
